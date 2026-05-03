@@ -33,6 +33,7 @@ export async function GET(request: Request) {
       description: 'APIから取得したデータ',
       location: '東京都',
       salary: '月給30万円',
+      status: 'published', 
     },
   ]
 
