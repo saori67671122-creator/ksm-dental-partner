@@ -1,0 +1,17 @@
+name: Reminder Email
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # 毎日3:00
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch unread applications
+        run: |
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/get_unread_applications" \
+          -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
