@@ -2,7 +2,7 @@ name: Reminder Email
 
 on:
   schedule:
-    - cron: '0 18 * * *' # 毎日3:00
+    - cron: '0 18 * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,8 +10,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Fetch unread applications
+        id: fetch
         run: |
-          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/get_unread_applications" \
-          -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-          -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          DATA=$(curl -s -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/get_unread_applications" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}")
+
+          echo "data=$DATA" >> $GITHUB_OUTPUT
+
+      - name: Send email if exists
+        run: |
+          DATA='${{ steps.fetch.outputs.data }}'
+          COUNT=$(echo $DATA | jq length)
+
+          if [ "$COUNT" -gt 0 ]; then
+            EMAIL=$(echo $DATA | jq -r '.[0].applicant_email')
+
+            curl -X POST https://api.resend.com/emails \
+              -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"from\": \"onboarding@resend.dev\",
+                \"to\": \"$EMAIL\",
+                \"subject\": \"応募未対応のお知らせ\",
+                \"html\": \"48時間以上未対応の応募があります。対応をお願いします。\"
+              }"
+          else
+            echo "No unread applications"
+          fi
