@@ -35,7 +35,7 @@ jobs:
               -H "Content-Type: application/json" \
               -d "{
                 \"from\": \"onboarding@resend.dev\",
-                \"to\": \"$EMAIL\",
+                \"to\": \"saori67671122@gmail.com\",
                 \"subject\": \"応募未対応のお知らせ\",
                 \"html\": \"48時間以上未対応の応募があります。対応をお願いします。\"
               }"
