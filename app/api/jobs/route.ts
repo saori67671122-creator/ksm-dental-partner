@@ -10,7 +10,10 @@ export async function GET(request: Request) {
   const keyword = searchParams.get('keyword') || ''
 
   // Supabaseから取得
-  let query = supabase.from('jobs').select('*')
+  let query = supabase
+  .from('jobs')
+  .select('*')
+  .eq('status', 'published')
 
   if (keyword) {
     query = query.ilike('title', `%${keyword}%`)
