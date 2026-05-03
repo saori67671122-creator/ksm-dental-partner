@@ -2,7 +2,7 @@ name: Reminder Email
 
 on:
   schedule:
-    - cron: '0 18 * * *'
+    - cron: '0 18 * * *' # 日本時間3:00
   workflow_dispatch:
 
 jobs:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Install jq
-        run: sudo apt-get install -y jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Fetch unread applications
         id: fetch
@@ -20,25 +20,28 @@ jobs:
             -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}")
 
+          echo "Fetched data:"
+          echo "$DATA"
+
           echo "data=$DATA" >> $GITHUB_OUTPUT
 
       - name: Send email if exists
         run: |
           DATA='${{ steps.fetch.outputs.data }}'
-          COUNT=$(echo $DATA | jq length)
+
+          COUNT=$(echo "$DATA" | jq length)
+          echo "Count: $COUNT"
 
           if [ "$COUNT" -gt 0 ]; then
-            EMAIL=$(echo $DATA | jq -r '.[0].applicant_email')
+            EMAIL=$(echo "$DATA" | jq -r '.[0].applicant_email')
+            echo "Detected email: $EMAIL"
 
             curl -X POST https://api.resend.com/emails \
               -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"from\": \"onboarding@resend.dev\",
-                \"to\": \"saori67671122@gmail.com\",
-                \"subject\": \"応募未対応のお知らせ\",
-                \"html\": \"48時間以上未対応の応募があります。対応をお願いします。\"
-              }"
+              -d "{\"from\":\"onboarding@resend.dev\",\"to\":\"saori67671122@gmail.com\",\"subject\":\"応募未対応のお知らせ\",\"html\":\"48時間以上未対応の応募があります。対応をお願いします。\"}"
+
+            echo "Email sent"
           else
             echo "No unread applications"
           fi
