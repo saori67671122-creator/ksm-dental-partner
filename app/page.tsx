@@ -1,30 +1,49 @@
-import { createClient } from '@supabase/supabase-js'
+import Link from 'next/link'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+async function getJobs(keyword?: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/jobs?keyword=${keyword || ''}`,
+    { cache: 'no-store' }
+  )
 
-async function getJobs() {
-  const db = await supabase.from('jobs').select('*')
-
-  const api = await fetch('http://localhost:3000/api/jobs')
-  const apiData = await api.json()
-
-  return [...(db.data || []), ...(apiData.jobs || [])]
+  const data = await res.json()
+  return data.jobs || []
 }
 
-export default async function Home() {
-  const jobs = await getJobs()
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: { keyword?: string }
+}) {
+  const keyword = searchParams?.keyword || ''
+  const jobs = await getJobs(keyword)
 
   return (
-    <main>
+    <main style={{ padding: '20px' }}>
       <h1>KSM Dental Partner</h1>
 
+      {/* 検索 */}
+      <form method="GET">
+        <input
+          name="keyword"
+          placeholder="例：歯科衛生士 東京"
+          defaultValue={keyword}
+        />
+        <button type="submit">検索</button>
+      </form>
+
+      {/* 一覧 */}
       {jobs.map((job: any) => (
-        <div key={job.id}>
-          <h2>{job.title}</h2>
+        <div key={job.id} style={{ marginTop: '20px' }}>
+          <Link href={`/jobs/${job.id}`}>
+            <h2 style={{ cursor: 'pointer', color: 'skyblue' }}>
+              {job.title}
+            </h2>
+          </Link>
+
           <p>{job.description}</p>
+          <p>{job.location}</p>
+          <p>{job.salary}</p>
         </div>
       ))}
     </main>
