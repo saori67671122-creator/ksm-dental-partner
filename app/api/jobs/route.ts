@@ -14,6 +14,7 @@ export async function GET(request: Request) {
   .from('jobs')
   .select('*')
   .eq('status', 'published')
+  .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
 
   if (keyword) {
     query = query.ilike('title', `%${keyword}%`)

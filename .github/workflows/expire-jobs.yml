@@ -1,0 +1,17 @@
+name: Expire Jobs
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # 日本時間3:00
+  workflow_dispatch:
+
+jobs:
+  expire:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Supabase
+        run: |
+          curl -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/expire_jobs" \
+          -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
