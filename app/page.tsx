@@ -1,10 +1,9 @@
 import Link from 'next/link'
 
 async function getJobs(keyword?: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/jobs?keyword=${keyword || ''}`,
-    { cache: 'no-store' }
-  )
+  const res = await fetch(`/api/jobs?keyword=${keyword || ''}`, {
+    cache: 'no-store',
+  })
 
   const data = await res.json()
   return data.jobs || []
@@ -22,7 +21,6 @@ export default async function Home({
     <main style={{ padding: '20px' }}>
       <h1>KSM Dental Partner</h1>
 
-      {/* 検索 */}
       <form method="GET">
         <input
           name="keyword"
@@ -32,7 +30,6 @@ export default async function Home({
         <button type="submit">検索</button>
       </form>
 
-      {/* 一覧 */}
       {jobs.map((job: any) => (
         <div key={job.id} style={{ marginTop: '20px' }}>
           <Link href={`/jobs/${job.id}`}>
